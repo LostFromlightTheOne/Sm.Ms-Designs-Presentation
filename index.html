@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SM|MS Designs & Construction - Digital Platform Strategy | Elarven</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'elarven-black': '#050505',
+                        'elarven-purple-dark': '#130a1e',
+                        'elarven-accent': '#9d4edd',
+                        'elarven-gray': '#8f95a3',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #ffffff;
+            overflow: hidden; /* Prevent native scroll, use custom slider */
+        }
+        
+        /* Typography Polish */
+        h1, h2, h3, h4, h5, h6 {
+            letter-spacing: -0.02em;
+        }
+
+        /* Slide Transitions */
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease-in-out, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(20px);
+            z-index: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            z-index: 10;
+        }
+
+        .slide.prev {
+            transform: translateY(-20px);
+        }
+
+        /* Custom Scrollbar for slides */
+        .slide::-webkit-scrollbar {
+            width: 6px;
+        }
+        .slide::-webkit-scrollbar-track {
+            background: #050505;
+        }
+        .slide::-webkit-scrollbar-thumb {
+            background: #1a1a1a;
+            border-radius: 10px;
+        }
+        .slide::-webkit-scrollbar-thumb:hover {
+            background: #333;
+        }
+
+        /* Ambient Glows */
+        .glow-accent {
+            position: absolute;
+            width: 40vmax;
+            height: 40vmax;
+            background: radial-gradient(circle, rgba(157,78,221,0.07) 0%, rgba(5,5,5,0) 70%);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        
+        /* Grid Background Pattern */
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Progress Bar */
+        #progress-bar {
+            transition: width 0.4s ease;
+        }
+
+        /* Subtle element animations */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .slide.active .fade-up {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .slide.active .delay-100 { transition-delay: 100ms; }
+        .slide.active .delay-200 { transition-delay: 200ms; }
+        .slide.active .delay-300 { transition-delay: 300ms; }
+        .slide.active .delay-400 { transition-delay: 400ms; }
+
+        /* Tags */
+        .tag {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            display: inline-block;
+            font-weight: 600;
+        }
+        .tag-verified { border: 1px solid rgba(157,78,221,0.5); color: #9d4edd; background: rgba(157,78,221,0.05); }
+        .tag-observed { border: 1px solid rgba(255,255,255,0.2); color: #a0aec0; background: rgba(255,255,255,0.02); }
+        .tag-inferred { border: 1px solid rgba(59,130,246,0.4); color: #60a5fa; background: rgba(59,130,246,0.05); }
+        .tag-validate { border: 1px solid rgba(245,158,11,0.4); color: #fbbf24; background: rgba(245,158,11,0.05); }
+
+        /* Diagram Elements */
+        .node {
+            background: #111;
+            border: 1px solid #333;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+        }
+        .arrow-down::after {
+            content: '↓';
+            display: block;
+            margin: 0.5rem 0;
+            color: #9d4edd;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen text-white bg-elarven-black">
+    
+    <!-- Top Progress Bar -->
+    <div class="fixed top-0 left-0 w-full h-1 bg-gray-900 z-50">
+        <div id="progress-bar" class="h-full bg-elarven-accent w-0"></div>
+    </div>
+
+    <!-- Navigation Overlay -->
+    <div class="fixed bottom-6 right-8 z-50 flex items-center space-x-4 opacity-50 hover:opacity-100 transition-opacity">
+        <span id="slide-counter" class="text-xs tracking-widest text-elarven-gray mr-4">01 / 28</span>
+        <button id="btn-prev" class="p-2 border border-gray-800 rounded-full hover:border-elarven-accent hover:text-elarven-accent transition">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button id="btn-next" class="p-2 border border-gray-800 rounded-full hover:border-elarven-accent hover:text-elarven-accent transition">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+    </div>
+
+    <!-- Brand Corner -->
+    <div class="fixed top-8 left-8 z-50 flex items-center space-x-3 fade-up">
+        <div class="w-2 h-2 bg-elarven-accent rounded-full"></div>
+        <span class="text-xs font-semibold tracking-[0.2em] text-white">ELARVEN</span>
+    </div>
+    <div class="fixed top-8 right-8 z-50 fade-up">
+        <span class="text-[0.65rem] tracking-[0.1em] text-elarven-gray uppercase">Strategic Proposal</span>
+    </div>
+
+    <!-- Background Ambience -->
+    <div class="glow-accent top-[-10%] left-[-10%]"></div>
+    <div class="glow-accent bottom-[-20%] right-[-10%]"></div>
+    <div class="fixed inset-0 bg-grid-pattern opacity-30 z-0 pointer-events-none"></div>
+
+    <main id="presentation-main" class="relative w-full h-full flex-grow overflow-hidden z-10">
+        
+        <!-- Slide 01: Cover -->
+        <section class="slide active flex items-center justify-center p-8 lg:p-24" id="slide-1">
+            <div class="max-w-5xl w-full text-center">
+                <div class="fade-up mb-6">
+                    <span class="tag tag-observed">Private & Confidential</span>
+                </div>
+                <h1 class="text-5xl md:text-7xl font-light leading-tight mb-8 fade-up delay-100">
+                    Digital Platform & <br> <span class="font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-elarven-accent">Growth Strategy</span>
+                </h1>
+                <div class="h-[1px] w-24 bg-gray-800 mx-auto mb-8 fade-up delay-200"></div>
+                <p class="text-xl text-elarven-gray tracking-wide uppercase fade-up delay-300 mb-2">Prepared for</p>
+                <p class="text-2xl font-semibold fade-up delay-300">SM|MS Designs & Construction</p>
+            </div>
+        </section>
+
+        <!-- Slide 02: Executive Summary -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-2">
+            <div class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16">
+                <div class="lg:col-span-5 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">02 — Executive Summary</h2>
+                    <h3 class="text-4xl font-light leading-snug">The Infrastructure <br>of Growth</h3>
+                </div>
+                <div class="lg:col-span-7 fade-up delay-100">
+                    <p class="text-2xl font-light text-gray-300 leading-relaxed mb-8">
+                        SM|MS Designs & Construction has established strong visual credibility, physical execution capability, and market attention in Jamaica. 
+                    </p>
+                    <p class="text-lg text-elarven-gray leading-relaxed">
+                        The strategic opportunity now is to build an owned digital architecture that systematically converts this localized attention into structured discoverability, qualified inquiries, and measurable long-term business value.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 03: SM|MS Today -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-3">
+            <div class="max-w-6xl w-full mx-auto">
+                <div class="mb-16 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">03 — SM|MS Today</h2>
+                    <h3 class="text-4xl font-light">A Foundation of Excellence</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div class="bg-gray-900/40 border border-gray-800 p-10 rounded-2xl backdrop-blur-sm fade-up delay-100">
+                        <span class="tag tag-verified mb-6">Media Recognition</span>
+                        <blockquote class="text-xl font-light italic text-gray-300 leading-relaxed mb-6">
+                            "Today, the power couple transforms residential and commercial spaces with stunning interior designs."
+                        </blockquote>
+                        <p class="text-sm text-elarven-gray">— The Jamaica Gleaner, Nov 2024</p>
+                    </div>
+                    <div class="flex flex-col justify-center fade-up delay-200 space-y-6">
+                        <p class="text-lg text-gray-300">Under the leadership of Samara and Michael Singleton, SM|MS has built a reputation for chic innovation.</p>
+                        <p class="text-lg text-gray-300">The firm successfully executes complex transformations across both residential and commercial spaces.</p>
+                        <p class="text-xl text-white font-medium pt-4 border-t border-gray-800">The physical work speaks for itself. The brand equity is real.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 04: What is Already Working -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-4">
+            <div class="max-w-6xl w-full mx-auto">
+                <div class="mb-16 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">04 — Current Assets</h2>
+                    <h3 class="text-4xl font-light">What SM|MS Has Already Built</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 fade-up delay-100">
+                    <div class="border border-gray-800 p-8 rounded-xl bg-[#0a0a0a] hover:border-gray-600 transition">
+                        <h4 class="text-xl mb-4 font-medium">Visual Proof</h4>
+                        <p class="text-elarven-gray text-sm">Stunning project outcomes and transformations that command attention organically.</p>
+                        <div class="mt-6 flex"><span class="tag tag-observed">Observed</span></div>
+                    </div>
+                    <div class="border border-gray-800 p-8 rounded-xl bg-[#0a0a0a] hover:border-gray-600 transition delay-100">
+                        <h4 class="text-xl mb-4 font-medium">Leadership Narrative</h4>
+                        <p class="text-elarven-gray text-sm">A compelling founding couple (Samara & Michael) providing a human connection to the business.</p>
+                        <div class="mt-6 flex"><span class="tag tag-verified">Verified</span></div>
+                    </div>
+                    <div class="border border-gray-800 p-8 rounded-xl bg-[#0a0a0a] hover:border-gray-600 transition delay-200">
+                        <h4 class="text-xl mb-4 font-medium">Market Capability</h4>
+                        <p class="text-elarven-gray text-sm">Proven execution across both residential and commercial sectors in Jamaica.</p>
+                        <div class="mt-6 flex"><span class="tag tag-verified">Verified</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 05: Current Digital Presence -->
+        <section class="slide flex items-center p-8 lg:p-24 bg-elarven-purple-dark/20" id="slide-5">
+            <div class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16">
+                <div class="fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">05 — Digital Assessment</h2>
+                    <h3 class="text-4xl font-light mb-8">The Missing Center</h3>
+                    <p class="text-lg text-gray-300 mb-6">Currently, SM|MS's digital footprint relies almost entirely on social media and third-party platforms for visibility.</p>
+                    <p class="text-lg text-gray-300">While excellent for initial discovery, there is no centralized, owned digital destination to structure the customer journey.</p>
+                </div>
+                <div class="fade-up delay-200 border-l border-gray-800 pl-8 lg:pl-16 flex flex-col justify-center">
+                    <div class="mb-8">
+                        <span class="tag tag-verified mb-3">Critical Finding</span>
+                        <h4 class="text-2xl font-medium text-white mb-2">No Official Website Hub</h4>
+                        <p class="text-elarven-gray">The absence of a primary website is an unbuilt growth asset. It leaves a gap between discovering the brand and committing to a high-value project.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 06: The Digital Gap -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-6">
+            <div class="max-w-6xl w-full mx-auto">
+                <div class="text-center mb-16 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">06 — The Digital Gap</h2>
+                    <h3 class="text-4xl font-light">Social Discovery vs. Digital Ownership</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-0 border border-gray-800 rounded-2xl overflow-hidden fade-up delay-100">
+                    <div class="bg-black p-10 lg:p-14 border-b md:border-b-0 md:border-r border-gray-800">
+                        <h4 class="text-2xl mb-8 font-medium">Social Media (Current)</h4>
+                        <ul class="space-y-6 text-elarven-gray">
+                            <li class="flex items-start"><span class="text-elarven-accent mr-3">✓</span> Excellent for brand awareness</li>
+                            <li class="flex items-start"><span class="text-elarven-accent mr-3">✓</span> Great for community building</li>
+                            <li class="flex items-start"><span class="text-gray-600 mr-3">✗</span> Fleeting content lifespan</li>
+                            <li class="flex items-start"><span class="text-gray-600 mr-3">✗</span> Unstructured project presentation</li>
+                            <li class="flex items-start"><span class="text-gray-600 mr-3">✗</span> High friction for serious inquiries</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gradient-to-br from-[#130a1e] to-black p-10 lg:p-14">
+                        <h4 class="text-2xl mb-8 font-medium text-white">Owned Platform (Proposed)</h4>
+                        <ul class="space-y-6 text-gray-300">
+                            <li class="flex items-start"><span class="text-elarven-accent mr-3">✓</span> Permanent search engine discoverability</li>
+                            <li class="flex items-start"><span class="text-elarven-accent mr-3">✓</span> Structured, deep project storytelling</li>
+                            <li class="flex items-start"><span class="text-elarven-accent mr-3">✓</span> Architecture of trust (testimonials, process)</li>
+                            <li class="flex items-start"><span class="text-elarven-accent mr-3">✓</span> Automated lead qualification</li>
+                            <li class="flex items-start"><span class="text-elarven-accent mr-3">✓</span> Owned data and analytics</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 07: Why an Owned Digital Platform Matters -->
+        <section class="slide flex items-center justify-center p-8 lg:p-24" id="slide-7">
+            <div class="max-w-4xl w-full text-center fade-up">
+                <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-6">07 — The Strategic Shift</h2>
+                <h3 class="text-4xl md:text-5xl font-light leading-tight mb-10">We are not proposing a "brochure website."</h3>
+                <div class="h-[1px] w-16 bg-gray-700 mx-auto mb-10"></div>
+                <p class="text-2xl text-gray-300 leading-relaxed font-light">
+                    We are proposing an <span class="font-medium text-white">Owned Digital Acquisition & Brand Platform</span>.
+                </p>
+                <p class="mt-6 text-lg text-elarven-gray">
+                    A centralized infrastructure functioning simultaneously as your portfolio, your credibility layer, your search acquisition channel, and your lead qualification system.
+                </p>
+            </div>
+        </section>
+
+        <!-- Slide 08: Audience & Customer Journey -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-8">
+            <div class="max-w-6xl w-full mx-auto">
+                <div class="mb-16 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">08 — Audience Expectations</h2>
+                    <h3 class="text-4xl font-light">The Psychology of the Prospect</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 fade-up delay-100">
+                    <div>
+                        <div class="flex items-center space-x-3 mb-6">
+                            <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs">R</div>
+                            <h4 class="text-2xl font-medium">Residential Clients</h4>
+                        </div>
+                        <p class="text-elarven-gray mb-6">Decisions are highly personal. Primary concerns revolve around emotional trust and execution.</p>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li class="p-3 border border-gray-800 rounded-lg">Design Alignment & Craftsmanship</li>
+                            <li class="p-3 border border-gray-800 rounded-lg">Budget & Timeline Transparency</li>
+                            <li class="p-3 border border-gray-800 rounded-lg">Disruption Mitigation in their home</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-3 mb-6">
+                            <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs">C</div>
+                            <h4 class="text-2xl font-medium">Commercial Clients</h4>
+                        </div>
+                        <p class="text-elarven-gray mb-6">Decisions are driven by ROI and risk mitigation. Primary concerns revolve around capacity.</p>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li class="p-3 border border-gray-800 rounded-lg">Scale Capability & Procurement</li>
+                            <li class="p-3 border border-gray-800 rounded-lg">Professionalism & Documentation</li>
+                            <li class="p-3 border border-gray-800 rounded-lg">Safety, Compliance & Timeline Adherence</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-12 text-center fade-up delay-300">
+                    <span class="tag tag-validate mb-2">To Validate</span>
+                    <p class="text-white text-lg">Does the current digital footprint adequately communicate these specific capabilities to both audiences?</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 09: Residential Opportunity -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-9">
+            <div class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div class="order-2 lg:order-1 relative h-64 lg:h-96 w-full rounded-2xl overflow-hidden bg-gray-900 border border-gray-800 flex items-center justify-center fade-up">
+                    <!-- Abstract representation of high-end residential -->
+                    <div class="absolute inset-0 opacity-20" style="background-image: repeating-linear-gradient(45deg, #333 25%, transparent 25%, transparent 75%, #333 75%, #333), repeating-linear-gradient(45deg, #333 25%, transparent 25%, transparent 75%, #333 75%, #333); background-position: 0 0, 10px 10px; background-size: 20px 20px;"></div>
+                    <span class="text-gray-600 font-mono tracking-widest uppercase">Residential Architecture</span>
+                </div>
+                <div class="order-1 lg:order-2 fade-up delay-100">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">09 — Segment Strategy</h2>
+                    <h3 class="text-4xl font-light mb-6">Elevating the Private Client Journey</h3>
+                    <p class="text-lg text-gray-300 mb-6">
+                        High-value residential clients seek reassurance before inviting a firm into their personal spaces.
+                    </p>
+                    <p class="text-elarven-gray mb-8">
+                        A structured digital pathway moves them from merely "liking an image" on Instagram to deeply understanding the SM|MS process, viewing comprehensive before-and-after galleries, and developing trust before the first phone call.
+                    </p>
+                    <div class="flex"><span class="tag tag-inferred">Opportunity: Increase consultation quality</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 10: Commercial Opportunity -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-10">
+            <div class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div class="fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">10 — Segment Strategy</h2>
+                    <h3 class="text-4xl font-light mb-6">Positioning for Commercial Scale</h3>
+                    <p class="text-lg text-gray-300 mb-6">
+                        Commercial procurement requires an entirely different set of trust signals. B2B decision-makers evaluate risk, process, and capacity.
+                    </p>
+                    <p class="text-elarven-gray mb-8">
+                        A dedicated commercial architecture on the website demonstrates capacity, highlights past commercial transformations, and speaks the exact language of corporate boards, developers, and facility managers.
+                    </p>
+                    <div class="flex"><span class="tag tag-inferred">Opportunity: Capture higher-margin contracts</span></div>
+                </div>
+                <div class="relative h-64 lg:h-96 w-full rounded-2xl overflow-hidden bg-[#130a1e] border border-[#9d4edd]/30 flex items-center justify-center fade-up delay-100">
+                    <div class="absolute w-full h-[1px] bg-[#9d4edd]/20 top-1/2"></div>
+                    <div class="absolute h-full w-[1px] bg-[#9d4edd]/20 left-1/2"></div>
+                    <span class="text-[#9d4edd] font-mono tracking-widest uppercase">Commercial Architecture</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 11: Service Architecture -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-11">
+            <div class="max-w-6xl w-full mx-auto">
+                <div class="mb-16 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">11 — Structure</h2>
+                    <h3 class="text-4xl font-light">Service Architecture</h3>
+                    <p class="mt-4 text-elarven-gray max-w-2xl">Organizing services clearly allows both prospects and search engines to immediately understand the exact capabilities of SM|MS.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 fade-up delay-100">
+                    <div class="border border-gray-800 p-6 rounded-xl relative overflow-hidden group hover:border-gray-500 transition">
+                        <div class="text-3xl mb-4 font-light text-gray-500 group-hover:text-white transition">01</div>
+                        <h4 class="text-lg font-medium mb-2">Residential Construction</h4>
+                        <div class="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition"><span class="tag tag-validate">To Validate</span></div>
+                    </div>
+                    <div class="border border-gray-800 p-6 rounded-xl relative overflow-hidden group hover:border-gray-500 transition">
+                        <div class="text-3xl mb-4 font-light text-gray-500 group-hover:text-white transition">02</div>
+                        <h4 class="text-lg font-medium mb-2">Commercial Construction</h4>
+                        <div class="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition"><span class="tag tag-validate">To Validate</span></div>
+                    </div>
+                    <div class="border border-gray-800 p-6 rounded-xl relative overflow-hidden group hover:border-gray-500 transition">
+                        <div class="text-3xl mb-4 font-light text-gray-500 group-hover:text-white transition">03</div>
+                        <h4 class="text-lg font-medium mb-2">Interior Design</h4>
+                        <div class="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition"><span class="tag tag-verified">Verified</span></div>
+                    </div>
+                    <div class="border border-gray-800 p-6 rounded-xl relative overflow-hidden group hover:border-gray-500 transition">
+                        <div class="text-3xl mb-4 font-light text-gray-500 group-hover:text-white transition">04</div>
+                        <h4 class="text-lg font-medium mb-2">Renovation</h4>
+                        <div class="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition"><span class="tag tag-verified">Verified</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 12: Portfolio -> Case Studies -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-12">
+            <div class="max-w-6xl w-full mx-auto">
+                <div class="text-center mb-16 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">12 — Storytelling</h2>
+                    <h3 class="text-4xl font-light">The Evolution of the Portfolio</h3>
+                    <p class="mt-4 text-elarven-gray">Moving from fragmented social posts to structured business cases.</p>
+                </div>
+                <div class="flex flex-col md:flex-row items-center justify-center gap-8 fade-up delay-100">
+                    <div class="node w-64">
+                        <h4 class="font-medium mb-2 text-gray-400">Social Post</h4>
+                        <p class="text-xs text-gray-600">Single image, brief caption, instant gratification.</p>
+                    </div>
+                    <div class="hidden md:block text-elarven-accent px-4 font-bold text-2xl">→</div>
+                    <div class="md:hidden text-elarven-accent py-2 font-bold text-2xl">↓</div>
+                    <div class="bg-gradient-to-br from-[#130a1e] to-black border border-[#9d4edd]/30 p-8 rounded-xl w-full md:w-96 text-left shadow-[0_0_30px_rgba(157,78,221,0.1)]">
+                        <h4 class="font-medium mb-4 text-white text-xl border-b border-gray-800 pb-4">Project Case Study</h4>
+                        <ul class="space-y-3 text-sm text-gray-300">
+                            <li><span class="text-elarven-accent mr-2">▪</span> The Client's Challenge</li>
+                            <li><span class="text-elarven-accent mr-2">▪</span> The Design Concept</li>
+                            <li><span class="text-elarven-accent mr-2">▪</span> Material Selection & Procurement</li>
+                            <li><span class="text-elarven-accent mr-2">▪</span> Execution & Timeline</li>
+                            <li><span class="text-elarven-accent mr-2">▪</span> Comprehensive Before & After</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 13: Trust & Credibility -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-13">
+            <div class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16">
+                <div class="lg:col-span-5 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">13 — Proof</h2>
+                    <h3 class="text-4xl font-light leading-snug mb-6">The Architecture<br>of Trust</h3>
+                    <p class="text-elarven-gray">A website allows SM|MS to permanently organize credibility markers that build immediate trust with high-tier clients.</p>
+                </div>
+                <div class="lg:col-span-7 grid grid-cols-2 gap-4 fade-up delay-100">
+                    <div class="p-6 bg-gray-900/50 border border-gray-800 rounded-lg">
+                        <h4 class="text-white font-medium mb-1">Media Features</h4>
+                        <p class="text-xs text-gray-500 mb-3">e.g., The Jamaica Gleaner</p>
+                        <span class="tag tag-verified">Verified</span>
+                    </div>
+                    <div class="p-6 bg-gray-900/50 border border-gray-800 rounded-lg">
+                        <h4 class="text-white font-medium mb-1">The Founder Story</h4>
+                        <p class="text-xs text-gray-500 mb-3">Samara & Michael's background</p>
+                        <span class="tag tag-verified">Verified</span>
+                    </div>
+                    <div class="p-6 bg-gray-900/50 border border-gray-800 rounded-lg">
+                        <h4 class="text-white font-medium mb-1">Client Testimonials</h4>
+                        <p class="text-xs text-gray-500 mb-3">Video or text endorsements</p>
+                        <span class="tag tag-validate">To Validate</span>
+                    </div>
+                    <div class="p-6 bg-gray-900/50 border border-gray-800 rounded-lg">
+                        <h4 class="text-white font-medium mb-1">Certifications</h4>
+                        <p class="text-xs text-gray-500 mb-3">Licenses, safety standards</p>
+                        <span class="tag tag-validate">To Validate</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 14: Lead Qualification -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-14">
+            <div class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div class="fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">14 — Operations</h2>
+                    <h3 class="text-4xl font-light mb-6">From DMs to Data</h3>
+                    <p class="text-lg text-gray-300 mb-6">
+                        A generic contact form or social media DM creates administrative overhead. A structured project inquiry system qualifies intent.
+                    </p>
+                    <p class="text-elarven-gray">
+                        By requiring prospects to provide specific information upfront, SM|MS filters out non-serious inquiries and ensures every consultation starts with actionable context.
+                    </p>
+                </div>
+                <div class="bg-black border border-gray-800 p-8 rounded-2xl fade-up delay-200">
+                    <h4 class="text-lg font-medium border-b border-gray-800 pb-4 mb-6">Proposed Inquiry Flow</h4>
+                    <div class="space-y-4">
+                        <div class="flex items-center text-sm text-gray-400 bg-gray-900 p-3 rounded">
+                            <span class="w-6 text-elarven-accent">01</span> Project Type (Res/Com)
+                        </div>
+                        <div class="flex items-center text-sm text-gray-400 bg-gray-900 p-3 rounded">
+                            <span class="w-6 text-elarven-accent">02</span> Location in Jamaica
+                        </div>
+                        <div class="flex items-center text-sm text-gray-400 bg-gray-900 p-3 rounded">
+                            <span class="w-6 text-elarven-accent">03</span> Target Timeline
+                        </div>
+                        <div class="flex items-center text-sm text-gray-400 bg-gray-900 p-3 rounded">
+                            <span class="w-6 text-elarven-accent">04</span> Budget Consideration
+                        </div>
+                        <div class="flex items-center text-sm text-gray-400 bg-gray-900 p-3 rounded">
+                            <span class="w-6 text-elarven-accent">05</span> Architectural Drawings Status
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 15: Consultation & Conversion -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-15">
+            <div class="max-w-5xl w-full mx-auto text-center">
+                <div class="mb-16 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">15 — The Sales Ecosystem</h2>
+                    <h3 class="text-4xl font-light">The Conversion Shift</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 fade-up delay-100">
+                    <div class="text-left">
+                        <h4 class="text-xl font-medium text-gray-500 mb-8 pb-4 border-b border-gray-800 uppercase tracking-wide text-center">The Current Path</h4>
+                        <div class="space-y-1">
+                            <div class="node arrow-down !bg-gray-900 !text-gray-400 border-none">Prospect sees social content</div>
+                            <div class="node arrow-down !bg-gray-900 !text-gray-400 border-none">Likes work</div>
+                            <div class="node arrow-down !bg-gray-900 !text-gray-400 border-none">Sends DM or WhatsApp</div>
+                            <div class="node arrow-down !bg-gray-900 !text-gray-400 border-none">Limited context provided</div>
+                            <div class="node !bg-red-900/20 !text-red-400 !border-red-900/50">Manual conversation & Friction</div>
+                        </div>
+                    </div>
+                    <div class="text-left">
+                        <h4 class="text-xl font-medium text-white mb-8 pb-4 border-b border-gray-800 uppercase tracking-wide text-center">The Platform Path</h4>
+                        <div class="space-y-1">
+                            <div class="node arrow-down !border-gray-700">Discovers SM|MS (Search/Social)</div>
+                            <div class="node arrow-down !border-gray-700">Explores Platform Portfolio & Process</div>
+                            <div class="node arrow-down !border-gray-700">Sees Proof & Credibility</div>
+                            <div class="node arrow-down !border-gray-700">Completes Structured Inquiry</div>
+                            <div class="node !bg-elarven-accent/20 !text-white !border-elarven-accent/50 shadow-[0_0_15px_rgba(157,78,221,0.2)]">Qualified Consultation Booked</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 16: SEO Opportunity -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-16">
+            <div class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+                <div class="lg:col-span-6 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">16 — Acquisition</h2>
+                    <h3 class="text-4xl font-light mb-6">Capturing Active Search Intent</h3>
+                    <p class="text-lg text-gray-300 mb-6">
+                        People in Jamaica are actively opening Google to search for high-end construction and design expertise. 
+                    </p>
+                    <p class="text-elarven-gray">
+                        Social media targets people scrolling passively. SEO targets decision-makers who have an immediate project, a budget, and are actively seeking a firm to hire. This is a long-term acquisition asset.
+                    </p>
+                </div>
+                <div class="lg:col-span-6 fade-up delay-200">
+                    <div class="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-md">
+                        <div class="flex items-center space-x-3 mb-6 bg-black p-3 rounded-lg border border-gray-800">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <span class="text-gray-300 font-mono text-sm border-r border-gray-600 pr-3">commercial interior design kingston jamaica</span>
+                            <span class="text-blue-400 font-mono text-xs pl-1">Press Enter</span>
+                        </div>
+                        <div class="space-y-4 opacity-50">
+                            <div class="h-4 bg-gray-700 rounded w-3/4"></div>
+                            <div class="h-3 bg-gray-800 rounded w-full"></div>
+                            <div class="h-3 bg-gray-800 rounded w-5/6"></div>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end"><span class="tag tag-inferred">High-Intent Traffic Opportunity</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 17: Local SEO / Google Business -->
+        <section class="slide flex items-center justify-center p-8 lg:p-24" id="slide-17">
+            <div class="max-w-4xl w-full text-center fade-up">
+                <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-6">17 — Local Dominance</h2>
+                <h3 class="text-4xl md:text-5xl font-light leading-tight mb-8">Owning the Local Map</h3>
+                <p class="text-xl text-gray-300 leading-relaxed font-light mb-10">
+                    The platform anchors your local digital footprint. By optimizing localized landing pages, ensuring NAP (Name, Address, Phone) consistency, and structuring a Google Business Profile, SM|MS claims authoritative real estate in local search results.
+                </p>
+                <div class="inline-flex items-center space-x-2 border border-gray-800 bg-gray-900 rounded-full px-6 py-3">
+                    <span class="text-elarven-accent">📍</span>
+                    <span class="text-sm font-medium tracking-wide">Kingston & St. Andrew Corporate Area Search Dominance</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 18: Content Ecosystem -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-18">
+            <div class="max-w-6xl w-full mx-auto">
+                <div class="text-center mb-16 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">18 — Content Engine</h2>
+                    <h3 class="text-4xl font-light">The Multiplication of Value</h3>
+                    <p class="mt-4 text-elarven-gray">A single project documented on the platform fuels the entire marketing engine.</p>
+                </div>
+                <div class="relative max-w-3xl mx-auto mt-12 fade-up delay-200">
+                    <div class="absolute inset-0 flex items-center justify-center z-0">
+                        <div class="w-64 h-64 border-4 border-gray-800 rounded-full animate-[spin_30s_linear_infinite]"></div>
+                    </div>
+                    <div class="relative z-10 flex flex-col items-center justify-center">
+                        <div class="bg-[#130a1e] border border-[#9d4edd] text-white p-6 rounded-xl w-64 text-center mb-8 shadow-lg">
+                            <span class="font-bold block text-lg mb-1">1 Project Completed</span>
+                            <span class="text-xs text-elarven-gray">Published to Website Portfolio</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-32 gap-y-8 w-full px-8 text-center text-sm text-gray-300">
+                            <div class="bg-black border border-gray-800 p-4 rounded-lg">Before/After Reels (IG)</div>
+                            <div class="bg-black border border-gray-800 p-4 rounded-lg">Material Insight Blog (SEO)</div>
+                            <div class="bg-black border border-gray-800 p-4 rounded-lg">Leadership Post (LinkedIn)</div>
+                            <div class="bg-black border border-gray-800 p-4 rounded-lg">Process Case Study (Sales)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 19: Competitive Digital Landscape -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-19">
+            <div class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div class="fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">19 — The Market</h2>
+                    <h3 class="text-4xl font-light mb-6">The Digital White Space</h3>
+                    <p class="text-lg text-gray-300 mb-6">
+                        Many Jamaican construction and design firms suffer from outdated digital footprints, poor mobile experiences, and a lack of clear service architecture.
+                    </p>
+                    <p class="text-elarven-gray">
+                        SM|MS already possesses the aesthetic advantage and the physical execution. Pairing this real-world capability with digital superiority creates a moat that competitors cannot easily cross.
+                    </p>
+                    <div class="mt-8 flex"><span class="tag tag-observed">Observed Industry Standard</span></div>
+                </div>
+                <div class="space-y-6 fade-up delay-200">
+                    <div class="flex items-center justify-between p-5 border border-gray-800 bg-gray-900/50 rounded-lg">
+                        <span class="text-gray-400">Mobile Experience</span>
+                        <span class="text-elarven-accent font-medium text-sm">Opportunity</span>
+                    </div>
+                    <div class="flex items-center justify-between p-5 border border-gray-800 bg-gray-900/50 rounded-lg">
+                        <span class="text-gray-400">Project Searchability</span>
+                        <span class="text-elarven-accent font-medium text-sm">Opportunity</span>
+                    </div>
+                    <div class="flex items-center justify-between p-5 border border-gray-800 bg-gray-900/50 rounded-lg">
+                        <span class="text-gray-400">Trust Architecture</span>
+                        <span class="text-elarven-accent font-medium text-sm">Opportunity</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 20: Information Architecture -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-20">
+            <div class="max-w-6xl w-full mx-auto">
+                <div class="text-center mb-16 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">20 — UX Strategy</h2>
+                    <h3 class="text-4xl font-light">Information Architecture</h3>
+                </div>
+                <div class="flex flex-wrap justify-center gap-6 fade-up delay-100 font-mono text-sm">
+                    <div class="w-full text-center mb-4"><div class="inline-block border border-[#9d4edd] text-[#9d4edd] px-8 py-3 rounded">HOME</div></div>
+                    <div class="w-[1px] h-8 bg-gray-700 mx-auto w-full -my-6"></div>
+                    <div class="flex flex-wrap justify-center gap-4 w-full border-t border-gray-700 pt-8 mt-2 relative">
+                        <div class="border border-gray-700 px-6 py-3 rounded bg-black">EXPERTISE <br><span class="text-[0.65rem] text-gray-500 mt-2 block">(Res/Com/Interiors)</span></div>
+                        <div class="border border-gray-700 px-6 py-3 rounded bg-black">PROJECTS <br><span class="text-[0.65rem] text-gray-500 mt-2 block">(Case Studies)</span></div>
+                        <div class="border border-gray-700 px-6 py-3 rounded bg-black">THE PROCESS <br><span class="text-[0.65rem] text-gray-500 mt-2 block">(How We Work)</span></div>
+                        <div class="border border-gray-700 px-6 py-3 rounded bg-black">THE FIRM <br><span class="text-[0.65rem] text-gray-500 mt-2 block">(Founders/Media)</span></div>
+                        <div class="border border-elarven-accent text-white bg-elarven-accent/10 px-6 py-3 rounded">INQUIRY <br><span class="text-[0.65rem] text-elarven-accent mt-2 block">(Qualification)</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 21: Homepage Experience -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-21">
+            <div class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16">
+                <div class="lg:col-span-5 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">21 — Design Strategy</h2>
+                    <h3 class="text-4xl font-light leading-snug mb-6">The First<br>10 Seconds</h3>
+                    <p class="text-elarven-gray">The homepage must immediately communicate premium positioning, physical proof, and a clear path to action.</p>
+                </div>
+                <div class="lg:col-span-7 bg-[#0a0a0a] border border-gray-800 p-8 rounded-xl fade-up delay-100">
+                    <ul class="space-y-4 text-sm text-gray-300">
+                        <li class="flex items-center"><span class="text-elarven-accent mr-4 font-mono">01.</span> Cinematic Hero (Work speaking for itself)</li>
+                        <li class="flex items-center"><span class="text-elarven-accent mr-4 font-mono">02.</span> Immediate Proof (Media Mentions / Logos)</li>
+                        <li class="flex items-center"><span class="text-elarven-accent mr-4 font-mono">03.</span> Clear Service Pathways (Res / Com)</li>
+                        <li class="flex items-center"><span class="text-elarven-accent mr-4 font-mono">04.</span> Featured Project Transformations</li>
+                        <li class="flex items-center"><span class="text-elarven-accent mr-4 font-mono">05.</span> The SM|MS Standard (Process Overview)</li>
+                        <li class="flex items-center"><span class="text-elarven-accent mr-4 font-mono">06.</span> The Founders (Samara & Michael)</li>
+                        <li class="flex items-center pt-4 border-t border-gray-800"><span class="text-white font-medium">07. Project Qualification Call-to-Action</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 22: Business-Level Features -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-22">
+            <div class="max-w-6xl w-full mx-auto">
+                <div class="mb-16 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">22 — Technical Foundation</h2>
+                    <h3 class="text-4xl font-light">Business-Level Platform Features</h3>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-6 fade-up delay-100">
+                    <div class="border border-gray-800 p-6 rounded-lg bg-black">
+                        <h4 class="text-white font-medium mb-2">Mobile-First</h4>
+                        <p class="text-xs text-gray-500">Engineered for flawless performance on all devices.</p>
+                    </div>
+                    <div class="border border-gray-800 p-6 rounded-lg bg-black">
+                        <h4 class="text-white font-medium mb-2">Portfolio CMS</h4>
+                        <p class="text-xs text-gray-500">Easy internal management of new project case studies.</p>
+                    </div>
+                    <div class="border border-gray-800 p-6 rounded-lg bg-black">
+                        <h4 class="text-white font-medium mb-2">Technical SEO</h4>
+                        <p class="text-xs text-gray-500">Schema markup, fast load times, and clean semantic HTML.</p>
+                    </div>
+                    <div class="border border-gray-800 p-6 rounded-lg bg-black">
+                        <h4 class="text-white font-medium mb-2">Conversion UI</h4>
+                        <p class="text-xs text-gray-500">Strategic placement of inquiry forms and contact points.</p>
+                    </div>
+                    <div class="border border-gray-800 p-6 rounded-lg bg-black">
+                        <h4 class="text-white font-medium mb-2">Analytics Layer</h4>
+                        <p class="text-xs text-gray-500">Integrated tracking for user behavior and form submissions.</p>
+                    </div>
+                    <div class="border border-gray-800 p-6 rounded-lg bg-black">
+                        <h4 class="text-white font-medium mb-2">High-Performance</h4>
+                        <p class="text-xs text-gray-500">Optimized asset delivery for heavy architectural imagery.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 23: Analytics & Measurement -->
+        <section class="slide flex items-center justify-center p-8 lg:p-24" id="slide-23">
+            <div class="max-w-4xl w-full text-center fade-up">
+                <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-6">23 — Measurement</h2>
+                <h3 class="text-4xl md:text-5xl font-light leading-tight mb-8">Data-Driven Growth</h3>
+                <p class="text-xl text-gray-300 leading-relaxed font-light mb-10">
+                    Moving beyond social "likes" to measurable business metrics. The platform will allow SM|MS to track inquiry submission rates, high-value service page engagement, organic local search growth, and the true digital customer journey.
+                </p>
+                <div class="flex justify-center space-x-6">
+                    <span class="tag tag-observed">Traffic</span>
+                    <span class="tag tag-observed">Engagement</span>
+                    <span class="tag tag-observed">Conversion</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 24: Opportunity Matrix -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-24">
+            <div class="max-w-6xl w-full mx-auto">
+                <div class="text-center mb-12 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">24 — Execution</h2>
+                    <h3 class="text-4xl font-light">Prioritizing the Build</h3>
+                </div>
+                <div class="relative w-full max-w-2xl mx-auto h-80 border-l-2 border-b-2 border-gray-700 p-4 fade-up delay-100 flex flex-col justify-between">
+                    <span class="absolute -left-12 top-0 text-xs text-gray-500 -rotate-90 origin-top-right">Impact →</span>
+                    <span class="absolute bottom-[-30px] right-0 text-xs text-gray-500">Effort →</span>
+                    
+                    <div class="absolute top-10 left-10 p-3 bg-[#130a1e] border border-[#9d4edd] rounded text-sm text-white">Platform Core & Portfolio</div>
+                    <div class="absolute top-24 left-48 p-3 bg-gray-900 border border-gray-600 rounded text-sm text-gray-300">Structured Inquiry System</div>
+                    <div class="absolute top-40 left-20 p-3 bg-gray-900 border border-gray-600 rounded text-sm text-gray-300">Google Business SEO</div>
+                    <div class="absolute bottom-20 right-20 p-3 bg-black border border-gray-800 rounded text-sm text-gray-500">Blog / Insight Engine (Phase 2)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 25: Discovery & Validation -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-25">
+            <div class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16">
+                <div class="lg:col-span-5 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">25 — Discovery</h2>
+                    <h3 class="text-4xl font-light leading-snug mb-6">What We Need<br>To Validate</h3>
+                    <p class="text-elarven-gray">Before engineering begins, we must align on business realities to ensure the platform solves the right problems.</p>
+                </div>
+                <div class="lg:col-span-7 bg-black border border-gray-800 p-8 rounded-xl fade-up delay-100">
+                    <ul class="space-y-5 text-gray-300">
+                        <li class="flex items-start">
+                            <span class="tag tag-validate mr-4 mt-1">To Validate</span>
+                            <div>What are your highest-margin target services?</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="tag tag-validate mr-4 mt-1">To Validate</span>
+                            <div>What is your ideal project scale (budget/timeline)?</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="tag tag-validate mr-4 mt-1">To Validate</span>
+                            <div>Current inquiry-to-consultation conversion rate?</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="tag tag-validate mr-4 mt-1">To Validate</span>
+                            <div>Availability of high-resolution project photography?</div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="tag tag-validate mr-4 mt-1">To Validate</span>
+                            <div>Specific target geographies within Jamaica?</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 26: Elarven's Role -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-26">
+            <div class="max-w-6xl w-full mx-auto text-center">
+                <div class="mb-16 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">26 — Partnership</h2>
+                    <h3 class="text-4xl font-light">Your Digital Growth Partner</h3>
+                </div>
+                <p class="max-w-3xl mx-auto text-xl text-gray-300 font-light leading-relaxed mb-12 fade-up delay-100">
+                    Elarven does not just build websites. We build the strategic digital infrastructure required for modern business growth. We connect strategy, design, and search.
+                </p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 fade-up delay-200">
+                    <div class="py-4 border-b border-gray-800 text-gray-400">Digital Strategy</div>
+                    <div class="py-4 border-b border-gray-800 text-gray-400">UX Architecture</div>
+                    <div class="py-4 border-b border-gray-800 text-gray-400">Premium Design</div>
+                    <div class="py-4 border-b border-gray-800 text-gray-400">SEO & Conversion</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 27: The Roadmap -->
+        <section class="slide flex items-center p-8 lg:p-24" id="slide-27">
+            <div class="max-w-6xl w-full mx-auto">
+                <div class="mb-16 fade-up">
+                    <h2 class="text-xs tracking-[0.2em] text-elarven-accent uppercase mb-4">27 — Next Steps</h2>
+                    <h3 class="text-4xl font-light">The Path Forward</h3>
+                </div>
+                <div class="space-y-4 fade-up delay-100">
+                    <div class="flex items-center p-4 bg-gray-900 border border-gray-800 rounded-lg">
+                        <div class="text-elarven-accent font-mono mr-6">Phase 1</div>
+                        <div class="text-white">Business Discovery & Requirements Gathering</div>
+                    </div>
+                    <div class="flex items-center p-4 bg-[#0a0a0a] border border-gray-800 rounded-lg opacity-60">
+                        <div class="text-gray-500 font-mono mr-6">Phase 2</div>
+                        <div class="text-gray-400">UX Architecture & Wireframing</div>
+                    </div>
+                    <div class="flex items-center p-4 bg-[#0a0a0a] border border-gray-800 rounded-lg opacity-60">
+                        <div class="text-gray-500 font-mono mr-6">Phase 3</div>
+                        <div class="text-gray-400">Premium Visual Design</div>
+                    </div>
+                    <div class="flex items-center p-4 bg-[#0a0a0a] border border-gray-800 rounded-lg opacity-60">
+                        <div class="text-gray-500 font-mono mr-6">Phase 4</div>
+                        <div class="text-gray-400">Platform Development & Technical SEO</div>
+                    </div>
+                    <div class="flex items-center p-4 bg-[#0a0a0a] border border-gray-800 rounded-lg opacity-60">
+                        <div class="text-gray-500 font-mono mr-6">Phase 5</div>
+                        <div class="text-gray-400">Launch & Optimization</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 28: Final Statement -->
+        <section class="slide flex items-center justify-center p-8 lg:p-24 bg-black" id="slide-28">
+            <div class="max-w-4xl w-full text-center fade-up">
+                <h3 class="text-3xl md:text-5xl font-light leading-tight mb-12">
+                    You have built the capability.<br>
+                    You have built the aesthetic.<br>
+                    You have built the attention.
+                </h3>
+                <div class="h-[1px] w-24 bg-elarven-accent mx-auto mb-12"></div>
+                <p class="text-2xl text-gray-300 font-medium">
+                    Now, let's build the digital infrastructure that captures that value.
+                </p>
+                <div class="mt-16 flex items-center justify-center space-x-3 opacity-50">
+                    <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    <span class="text-xs font-semibold tracking-[0.2em] text-white">ELARVEN</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+            let currentSlideIndex = 0;
+            
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const counter = document.getElementById('slide-counter');
+            const progressBar = document.getElementById('progress-bar');
+            
+            let isAnimating = false;
+
+            function updateUI() {
+                // Update counter
+                const displayNum = (currentSlideIndex + 1).toString().padStart(2, '0');
+                counter.textContent = `${displayNum} / ${totalSlides}`;
+                
+                // Update progress bar
+                const progress = ((currentSlideIndex + 1) / totalSlides) * 100;
+                progressBar.style.width = `${progress}%`;
+                
+                // Button states
+                btnPrev.style.opacity = currentSlideIndex === 0 ? '0.2' : '1';
+                btnPrev.style.pointerEvents = currentSlideIndex === 0 ? 'none' : 'auto';
+                
+                btnNext.style.opacity = currentSlideIndex === totalSlides - 1 ? '0.2' : '1';
+                btnNext.style.pointerEvents = currentSlideIndex === totalSlides - 1 ? 'none' : 'auto';
+            }
+
+            function goToSlide(index, direction) {
+                if (isAnimating || index < 0 || index >= totalSlides || index === currentSlideIndex) return;
+                isAnimating = true;
+
+                const currentSlide = slides[currentSlideIndex];
+                const nextSlide = slides[index];
+
+                // Prepare next slide position based on direction
+                if (direction === 'next') {
+                    nextSlide.style.transform = 'translateY(20px)';
+                } else {
+                    nextSlide.style.transform = 'translateY(-20px)';
+                }
+
+                // Remove active from current
+                currentSlide.classList.remove('active');
+                
+                // Add active to next after a tiny delay for CSS transition to catch the transform state
+                setTimeout(() => {
+                    nextSlide.classList.add('active');
+                    currentSlideIndex = index;
+                    updateUI();
+                    
+                    // Reset animation lock
+                    setTimeout(() => {
+                        isAnimating = false;
+                    }, 800); // Matches CSS transition time
+                }, 50);
+            }
+
+            function nextSlide() {
+                if (currentSlideIndex < totalSlides - 1) {
+                    goToSlide(currentSlideIndex + 1, 'next');
+                }
+            }
+
+            function prevSlide() {
+                if (currentSlideIndex > 0) {
+                    goToSlide(currentSlideIndex - 1, 'prev');
+                }
+            }
+
+            // Event Listeners
+            btnNext.addEventListener('click', nextSlide);
+            btnPrev.addEventListener('click', prevSlide);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+                    e.preventDefault();
+                    nextSlide();
+                }
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    prevSlide();
+                }
+            });
+
+            // Handle mouse wheel/trackpad scrolling for navigation
+            let scrollTimeout;
+            window.addEventListener('wheel', (e) => {
+                if(isAnimating) return;
+                
+                // Only trigger on significant scroll to prevent hypersensitivity
+                if(Math.abs(e.deltaY) > 40) {
+                    clearTimeout(scrollTimeout);
+                    scrollTimeout = setTimeout(() => {
+                        if (e.deltaY > 0) {
+                            nextSlide();
+                        } else {
+                            prevSlide();
+                        }
+                    }, 50);
+                }
+            });
+
+            // Touch events for mobile swiping
+            let touchStartY = 0;
+            let touchEndY = 0;
+
+            document.addEventListener('touchstart', e => {
+                touchStartY = e.changedTouches[0].screenY;
+            });
+
+            document.addEventListener('touchend', e => {
+                touchEndY = e.changedTouches[0].screenY;
+                handleSwipe();
+            });
+
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                if (touchStartY - touchEndY > swipeThreshold) {
+                    nextSlide(); // Swipe up -> next slide
+                }
+                if (touchEndY - touchStartY > swipeThreshold) {
+                    prevSlide(); // Swipe down -> prev slide
+                }
+            }
+
+            // Initialization
+            updateUI();
+            slides.forEach(slide => {
+                // Ensure internal scrolling within slide doesn't trigger slide change
+                slide.addEventListener('wheel', (e) => {
+                    const atTop = slide.scrollTop === 0;
+                    const atBottom = slide.scrollHeight - slide.scrollTop === slide.clientHeight;
+                    
+                    // If scrolling inside content and not at boundaries, stop propagation
+                    if((e.deltaY > 0 && !atBottom) || (e.deltaY < 0 && !atTop)) {
+                        e.stopPropagation();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
